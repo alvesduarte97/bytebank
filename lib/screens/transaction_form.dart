@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bytebank02/http/transaction_webclient.dart';
 import 'package:bytebank02/models/contact.dart';
 import 'package:bytebank02/models/transaction.dart';
+import 'package:bytebank02/widgets/progress.dart';
 import 'package:bytebank02/widgets/response_dialog.dart';
 import 'package:bytebank02/widgets/transactionAuthDialog.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,8 @@ class _TransactionFormState extends State<TransactionForm> {
   final TransactionWebClient _webClient = TransactionWebClient();
   final String transactionId = Uuid().v4();
 
+  bool _sending = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,6 +37,15 @@ class _TransactionFormState extends State<TransactionForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+              Visibility(
+                visible: _sending,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Progress(
+                    message: 'Sending...',
+                  ),
+                ),
+              ),
               Text(
                 widget.contact.name,
                 style: TextStyle(
@@ -95,9 +107,10 @@ class _TransactionFormState extends State<TransactionForm> {
     String password,
     BuildContext context,
   ) async {
+    _toggleProgressState();
+    await Future.delayed(Duration(seconds: 10));
     Transaction transaction =
         await _send(transactionCreated, password, context);
-    await Future.delayed(Duration(seconds: 10));
     _showSuccessfulMessage(transaction, context);
   }
 
@@ -124,6 +137,8 @@ class _TransactionFormState extends State<TransactionForm> {
           message: 'Timeout submitting the transaction');
     }, test: (e) => e is TimeoutException).catchError((e) {
       _showFailureMessage(context);
+    }).whenComplete(() {
+      _toggleProgressState();
     });
     return transaction;
   }
@@ -135,5 +150,11 @@ class _TransactionFormState extends State<TransactionForm> {
         builder: (contextDialog) {
           return FailureDialog(message);
         });
+  }
+
+  void _toggleProgressState() {
+    setState(() {
+      _sending = !_sending;
+    });
   }
 }
