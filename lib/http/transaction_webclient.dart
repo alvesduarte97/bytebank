@@ -9,9 +9,8 @@ class TransactionWebClient {
   static const String unencodedPath = 'transactions';
 
   Future<List<Transaction>> findAll() async {
-    final Response response = await client
-        .get(Uri.http(authority, unencodedPath))
-        .timeout(Duration(seconds: 5));
+    final Response response =
+        await client.get(Uri.http(authority, unencodedPath));
     final List<dynamic> decodeJson = jsonDecode(response.body);
     return decodeJson.map((json) => Transaction.fromMap(json)).toList();
   }
@@ -28,15 +27,23 @@ class TransactionWebClient {
       body: transactionJson,
     );
 
-    switch (response.statusCode) {
-      case 400:
-        throw Exception('there was an error submitting transaction');
-        break;
-      case 401:
-        throw Exception('authentication failed');
-        break;
+    if (response.statusCode == 200) {
+      return Transaction.fromJson(response.body);
     }
-
-    return Transaction.fromJson(response.body);
+    _throwHttpError(response.statusCode);
   }
+
+  void _throwHttpError(int statusCode) =>
+      throw HttpException(_statusCodeResponses[statusCode]);
+
+  static final Map<int, String> _statusCodeResponses = {
+    400: 'There was an error submitting transaction',
+    401: 'Authentication failed'
+  };
+}
+
+class HttpException implements Exception {
+  final String message;
+
+  HttpException(this.message);
 }
