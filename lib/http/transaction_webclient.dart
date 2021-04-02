@@ -34,12 +34,23 @@ class TransactionWebClient {
   }
 
   void _throwHttpError(int statusCode) =>
-      throw HttpException(_statusCodeResponses[statusCode]);
+      throw HttpException(_getMessage(statusCode));
 
   static final Map<int, String> _statusCodeResponses = {
     400: 'There was an error submitting transaction',
-    401: 'Authentication failed'
+    401: 'Authentication failed',
+    409: 'Transaction already exists',
   };
+
+  String _getMessage(int statusCode) {
+    String message = _statusCodeResponses[statusCode];
+
+    if (message == null) {
+      message = 'Unkown Error';
+    }
+
+    return message;
+  }
 }
 
 class HttpException implements Exception {

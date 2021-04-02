@@ -5,8 +5,10 @@ import 'package:bytebank02/models/contact.dart';
 class Transaction {
   final double value;
   final Contact contact;
+  final String id;
 
   Transaction(
+    this.id,
     this.value,
     this.contact,
   );
@@ -18,6 +20,7 @@ class Transaction {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'value': value,
       'contact': contact.toMap(),
     };
@@ -25,6 +28,7 @@ class Transaction {
 
   factory Transaction.fromMap(Map<String, dynamic> map) {
     return Transaction(
+      map['id'],
       map['value'],
       Contact.fromMap(map['contact']),
     );
